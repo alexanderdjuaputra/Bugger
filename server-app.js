@@ -53,11 +53,27 @@ function createApp(db) {
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
-  // Seed reference data on first request per warm instance. This is
-  // cheap (a handful of writes with fixed IDs) and idempotent, so it is
-  // safe to let every cold start call it without creating duplicates.
+  // Static files are served FIRST, unconditionally, before anything that
+  // touches the database. This is what guarantees the customer site and
+  // management site both load even if Firebase isn't connected yet — a
+  // request for "/" or "/styles.css" is fully handled right here and
+  // never reaches the database-dependent logic below.
+  app.use('/management', express.static(path.join(__dirname, 'public', 'management')));
+  app.use('/', express.static(path.join(__dirname, 'public')));
+
+  // Everything past this point is for /api/* only. If the database isn't
+  // connected (db is null — e.g. Firebase env vars not set yet on
+  // Vercel), every /api/* call returns one clear, readable error instead
+  // of the whole function crashing.
   let seeded = false;
   app.use(async (req, res, next) => {
+    if (!req.path.startsWith('/api/')) return next();
+    if (!db) {
+      return res.status(503).json({
+        error: 'Database not configured yet. Set FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, ' +
+               'and FIREBASE_PRIVATE_KEY in your Vercel project\'s Environment Variables, then redeploy.',
+      });
+    }
     if (!seeded) {
       try { await ensureSeeded(db); seeded = true; }
       catch (e) { return res.status(500).json({ error: 'Database not reachable: ' + e.message }); }
@@ -486,10 +502,7 @@ function createApp(db) {
   });
 
   /* ----------------------------- static sites ----------------------------- */
-  // Only mounted for local dev (`node server.js`). On Vercel, static files
-  // under /public are served directly by the platform, not by Express.
-  app.use('/management', express.static(path.join(__dirname, 'public', 'management')));
-  app.use('/', express.static(path.join(__dirname, 'public')));
+  // (moved to the top of this function — see the comment there for why)
 
   return app;
 }
