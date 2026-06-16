@@ -1,0 +1,173 @@
+/* BugBuster Pro — Customer site
+   Identity: a field-service "trail" look. Deep pine canopy + signal lime,
+   on a warm paper surface. Space Grotesk for headings gives a slightly
+   technical, ranger-station feel without being a generic serif. */
+
+:root {
+  --pine:    #0e3a2c;
+  --pine-2:  #16513c;
+  --lime:    #b6f24a;
+  --lime-d:  #8fd11f;
+  --paper:   #f6f4ec;
+  --card:    #ffffff;
+  --ink:     #14241d;
+  --muted:   #5c6b62;
+  --line:    #e2e0d4;
+  --amber:   #f0a500;
+  --danger:  #c0392b;
+  --radius:  14px;
+  --shadow:  0 8px 24px rgba(14,58,44,.10);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, sans-serif;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 500px at 80% -200px, #16513c22, transparent),
+    var(--paper);
+  min-height: 100vh;
+}
+
+/* ---------- top bar ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 22px;
+  background: var(--pine);
+  color: #eaf3ee;
+  position: sticky; top: 0; z-index: 20;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk"; }
+.brand-mark { color: var(--lime); font-size: 18px; letter-spacing: -2px; }
+.brand-name { font-weight: 700; font-size: 19px; letter-spacing: -.5px; }
+.brand-name .pro { color: var(--lime); }
+.topbar-right { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.topbar-right .who { opacity: .85; }
+.linklike { background: none; border: none; color: var(--lime); cursor: pointer; font: inherit; padding: 0; }
+
+/* ---------- layout ---------- */
+.wrap { max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
+.view.hidden, .panel.hidden, .hidden { display: none !important; }
+
+/* ---------- hero / auth ---------- */
+.hero { padding: 18px 0 10px; }
+.eyebrow {
+  text-transform: uppercase; letter-spacing: .16em; font-size: 12px;
+  font-weight: 600; color: var(--pine-2); margin: 0 0 10px;
+}
+.hero h1 {
+  font-family: "Space Grotesk"; font-weight: 700; font-size: clamp(30px, 6vw, 50px);
+  line-height: 1.04; margin: 0 0 14px; letter-spacing: -1.5px; color: var(--pine);
+}
+.lead { color: var(--muted); font-size: 17px; max-width: 540px; margin: 0; }
+
+.auth-card {
+  margin-top: 26px; background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow); max-width: 440px;
+  padding: 8px;
+}
+.tabs { display: flex; gap: 4px; background: #eef0e7; border-radius: 10px; padding: 4px; }
+.tab {
+  flex: 1; border: none; background: transparent; padding: 10px; border-radius: 8px;
+  font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.tab.active { background: var(--card); color: var(--pine); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+
+/* ---------- forms ---------- */
+.form { display: flex; flex-direction: column; gap: 14px; padding: 18px; }
+.form.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form .full { grid-column: 1 / -1; }
+label { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 600; color: #34423a; }
+input, select, textarea {
+  font: inherit; padding: 11px 12px; border: 1px solid var(--line); border-radius: 10px;
+  background: #fcfcf9; color: var(--ink); font-weight: 500;
+}
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--lime-d); border-color: transparent; }
+textarea { resize: vertical; }
+
+.btn {
+  border: none; border-radius: 11px; padding: 12px 18px; font: inherit; font-weight: 600;
+  cursor: pointer; transition: transform .05s ease, filter .15s ease;
+}
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--pine); color: #fff; }
+.btn.primary:hover { filter: brightness(1.12); }
+.btn.lime { background: var(--lime); color: var(--pine); }
+.btn.lime:hover { background: var(--lime-d); }
+.btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--pine); }
+.btn.small { padding: 8px 12px; font-size: 13px; border-radius: 9px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; }
+.msg { min-height: 20px; font-size: 14px; font-weight: 600; padding: 0 4px; }
+.msg.ok { color: var(--pine-2); }
+.msg.err { color: var(--danger); }
+
+/* ---------- subnav ---------- */
+.subnav { display: flex; gap: 8px; margin-bottom: 20px; }
+.navbtn {
+  border: 1px solid var(--line); background: var(--card); padding: 9px 16px;
+  border-radius: 999px; font: inherit; font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.navbtn.active { background: var(--pine); color: #fff; border-color: var(--pine); }
+
+.panel-title { font-family: "Space Grotesk"; color: var(--pine); letter-spacing: -.5px; margin: 0 0 16px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+
+.price-row { display: flex; align-items: center; justify-content: space-between;
+  background: #f0f6e8; border: 1px dashed var(--lime-d); border-radius: 10px; padding: 12px 16px; }
+.price-row strong { font-family: "Space Grotesk"; font-size: 20px; color: var(--pine); }
+
+/* ---------- booking cards ---------- */
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.bcard {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--shadow); padding: 18px; display: grid;
+  grid-template-columns: 1fr auto; gap: 6px 16px; align-items: start;
+}
+.bcard h3 { margin: 0; font-family: "Space Grotesk"; font-size: 18px; color: var(--pine); }
+.bcard .meta { color: var(--muted); font-size: 14px; }
+.bcard .actions { grid-column: 1 / -1; display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px;
+  border-top: 1px solid var(--line); padding-top: 12px; }
+
+/* status pill + tracker */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700;
+  padding: 5px 11px; border-radius: 999px; text-transform: capitalize; }
+.pill.pending     { background: #fdf0d5; color: #9a6b00; }
+.pill.confirmed   { background: #dff0e6; color: #186b41; }
+.pill.in.progress, .pill.inprogress { background: #e4e0ff; color: #4b34c4; }
+.pill.completed   { background: #d8f0d2; color: #2c7a1f; }
+.pill.cancelled   { background: #f3d9d4; color: #b23a26; }
+
+.tracker { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 8px; }
+.tracker .step { flex: 1; height: 6px; border-radius: 4px; background: #e7e7dd; }
+.tracker .step.on { background: var(--lime-d); }
+.tracker-labels { grid-column: 1/-1; display: flex; justify-content: space-between;
+  font-size: 11px; color: var(--muted); }
+
+/* ---------- modal ---------- */
+.modal-backdrop { position: fixed; inset: 0; background: rgba(14,36,29,.5);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 50; }
+.modal { background: var(--card); border-radius: 16px; max-width: 520px; width: 100%;
+  max-height: 86vh; overflow: auto; padding: 26px; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-close { position: absolute; top: 14px; right: 16px; border: none; background: none;
+  font-size: 26px; line-height: 1; cursor: pointer; color: var(--muted); }
+.modal h3 { font-family: "Space Grotesk"; color: var(--pine); margin-top: 0; }
+
+/* stars */
+.stars { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 4px; }
+.stars input { display: none; }
+.stars label { font-size: 30px; color: #d9d6c8; cursor: pointer; padding: 0; }
+.stars input:checked ~ label,
+.stars label:hover, .stars label:hover ~ label { color: var(--amber); }
+
+.report-line { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.report-line span:first-child { color: var(--muted); font-weight: 600; }
+.chem { font-size: 13px; padding: 4px 0; color: #34423a; }
+
+@media (max-width: 560px) {
+  .form.grid2 { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 32px; }
+}

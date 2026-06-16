@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BugBuster Pro — Operations Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- LOGIN GATE -->
+  <div id="loginGate" class="gate">
+    <form id="adminLogin" class="gate-card">
+      <div class="gate-brand">◣◢ BugBuster<span>Pro</span></div>
+      <p class="gate-sub">Operations &amp; Admin Console</p>
+      <label>Username<input name="username" value="admin" autocomplete="username" /></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" /></label>
+      <button class="btn primary" type="submit">Sign in</button>
+      <p id="loginMsg" class="msg err"></p>
+      <p class="gate-hint">Restricted area — staff only.</p>
+    </form>
+  </div>
+
+  <!-- CONSOLE -->
+  <div id="console" class="hidden">
+    <header class="ops-top">
+      <div class="ops-brand">◣◢ BugBuster<span>Pro</span> <em>Ops</em></div>
+      <nav class="ops-nav">
+        <button class="opsbtn active" data-view="dash">Dashboard</button>
+        <button class="opsbtn" data-view="queue">Bookings</button>
+      </nav>
+      <button class="btn ghost small" id="opsLogout">Sign out</button>
+    </header>
+
+    <main class="ops-main">
+      <!-- DASHBOARD -->
+      <section id="ops-dash" class="ops-view">
+        <h1 class="ops-h1">Management dashboard</h1>
+        <div id="kpis" class="kpis"></div>
+        <h2 class="ops-h2">Technician performance</h2>
+        <div class="tablewrap"><table id="techTable" class="table">
+          <thead><tr><th>Technician</th><th>Jobs</th><th>Avg rating</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+
+      <!-- QUEUE -->
+      <section id="ops-queue" class="ops-view hidden">
+        <div class="queue-head">
+          <h1 class="ops-h1">Bookings queue</h1>
+          <button class="btn ghost small" id="refreshBtn">↻ Refresh</button>
+        </div>
+        <div id="queueList" class="queue"></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL -->
+  <div id="modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

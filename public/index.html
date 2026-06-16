@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BugBuster Pro — Book pest control</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">◣◢</span>
+      <span class="brand-name">BugBuster<span class="pro">Pro</span></span>
+    </div>
+    <div class="topbar-right" id="topbarRight"></div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- AUTH -->
+    <section id="view-auth" class="view">
+      <div class="hero">
+        <p class="eyebrow">Pest control, handled</p>
+        <h1>Book a technician.<br/>Track them to your door.</h1>
+        <p class="lead">Termites, cockroaches, rats — pick a date, we dispatch the right specialist, and you watch the job from request to report.</p>
+      </div>
+
+      <div class="auth-card">
+        <div class="tabs">
+          <button class="tab active" data-tab="login">Log in</button>
+          <button class="tab" data-tab="register">Create account</button>
+        </div>
+
+        <form id="loginForm" class="form">
+          <label>Email<input type="email" name="email" value="demo@bugbuster.test" required /></label>
+          <label>Password<input type="password" name="password" value="demo123" required /></label>
+          <button class="btn primary" type="submit">Log in</button>
+          <p class="hint">Demo account is pre-filled. Or create your own.</p>
+        </form>
+
+        <form id="registerForm" class="form hidden">
+          <label>Full name<input name="name" required /></label>
+          <label>Email<input type="email" name="email" required /></label>
+          <label>Phone (numbers only)<input name="phone" inputmode="numeric" required /></label>
+          <label>Address<input name="address" required /></label>
+          <label>Password<input type="password" name="password" required /></label>
+          <button class="btn primary" type="submit">Create account</button>
+        </form>
+        <p id="authMsg" class="msg"></p>
+      </div>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="view-app" class="view hidden">
+      <nav class="subnav">
+        <button class="navbtn active" data-panel="book">Book service</button>
+        <button class="navbtn" data-panel="bookings">My bookings</button>
+      </nav>
+
+      <!-- BOOK -->
+      <div id="panel-book" class="panel">
+        <h2 class="panel-title">Book a service</h2>
+        <form id="bookForm" class="card form grid2">
+          <label class="full">Service type
+            <select name="service_type_id" id="serviceSelect" required></select>
+          </label>
+          <label>Date
+            <input type="date" name="booking_date" id="bookDate" required />
+          </label>
+          <label>Preferred time
+            <input type="time" name="preferred_time" value="09:00" required />
+          </label>
+          <label class="full">Service address
+            <input name="address" id="bookAddress" required />
+          </label>
+          <label class="full">Pest details (what are you seeing?)
+            <textarea name="pest_notes" rows="3" placeholder="e.g. droppings in the kitchen, scratching in the ceiling at night"></textarea>
+          </label>
+          <div class="full price-row">
+            <span>Price</span><strong id="priceTag">—</strong>
+          </div>
+          <button class="btn primary full" type="submit">Confirm booking</button>
+        </form>
+        <p id="bookMsg" class="msg"></p>
+      </div>
+
+      <!-- BOOKINGS -->
+      <div id="panel-bookings" class="panel hidden">
+        <h2 class="panel-title">My bookings</h2>
+        <div id="bookingsList" class="stack"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- modal for report / feedback -->
+  <div id="modal" class="modal-backdrop hidden">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
