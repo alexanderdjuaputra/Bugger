@@ -1,0 +1,12 @@
+node_modules/
+*.log
+.vercel
+
+# NEVER commit these — they contain real Firebase credentials.
+# If one of these ever gets committed, treat the key as compromised:
+# go to Firebase Console -> Project Settings -> Service Accounts ->
+# delete that key immediately and generate a new one.
+.env
+.env.local
+serviceAccountKey.json
+*-firebase-adminsdk-*.json

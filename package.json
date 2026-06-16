@@ -1,0 +1,19 @@
+{
+  "name": "bugbuster-pro",
+  "version": "2.0.0",
+  "description": "BugBuster Pro - Service Management Module (Vercel hosting + Firebase Firestore database)",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "seed": "node scripts/seed.js",
+    "test": "node tests/test.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "firebase-admin": "^14.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
