@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -14,13 +14,19 @@
   <!-- LOGIN GATE -->
   <div id="loginGate" class="gate">
     <form id="adminLogin" class="gate-card">
-      <div class="gate-brand">◣◢ BugBuster<span>Pro</span></div>
-      <p class="gate-sub">Operations &amp; Admin Console</p>
-      <label>Username<input name="username" value="admin" autocomplete="username" /></label>
-      <label>Password<input name="password" type="password" autocomplete="current-password" /></label>
-      <button class="btn primary" type="submit">Sign in</button>
+      <div class="gate-top-row">
+        <div class="gate-brand">◣◢ BugBuster<span>Pro</span></div>
+        <div class="lang-toggle" id="langToggleGate">
+          <button type="button" class="lang-btn" data-lang="id">ID</button>
+          <button type="button" class="lang-btn" data-lang="en">EN</button>
+        </div>
+      </div>
+      <p class="gate-sub" data-i18n="gate_sub">Operations &amp; Admin Console</p>
+      <label data-i18n="label_username">Username<input name="username" value="admin" autocomplete="username" /></label>
+      <label data-i18n="label_password">Password<input name="password" type="password" autocomplete="current-password" /></label>
+      <button class="btn primary" type="submit" data-i18n="btn_signin">Sign in</button>
       <p id="loginMsg" class="msg err"></p>
-      <p class="gate-hint">Restricted area — staff only.</p>
+      <p class="gate-hint" data-i18n="gate_hint">Restricted area — staff only.</p>
     </form>
   </div>
 
@@ -29,20 +35,24 @@
     <header class="ops-top">
       <div class="ops-brand">◣◢ BugBuster<span>Pro</span> <em>Ops</em></div>
       <nav class="ops-nav">
-        <button class="opsbtn active" data-view="dash">Dashboard</button>
-        <button class="opsbtn" data-view="queue">Bookings</button>
+        <button class="opsbtn active" data-view="dash" data-i18n="nav_dashboard">Dashboard</button>
+        <button class="opsbtn" data-view="queue" data-i18n="nav_bookings">Bookings</button>
       </nav>
-      <button class="btn ghost small" id="opsLogout">Sign out</button>
+      <div class="lang-toggle" id="langToggle">
+        <button class="lang-btn" data-lang="id">ID</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <button class="btn ghost small" id="opsLogout" data-i18n="btn_signout">Sign out</button>
     </header>
 
     <main class="ops-main">
       <!-- DASHBOARD -->
       <section id="ops-dash" class="ops-view">
-        <h1 class="ops-h1">Management dashboard</h1>
+        <h1 class="ops-h1" data-i18n="dashboard_title">Management dashboard</h1>
         <div id="kpis" class="kpis"></div>
-        <h2 class="ops-h2">Technician performance</h2>
+        <h2 class="ops-h2" data-i18n="tech_perf_title">Technician performance</h2>
         <div class="tablewrap"><table id="techTable" class="table">
-          <thead><tr><th>Technician</th><th>Jobs</th><th>Avg rating</th></tr></thead>
+          <thead><tr><th data-i18n="th_technician">Technician</th><th data-i18n="th_jobs">Jobs</th><th data-i18n="th_avg_rating">Avg rating</th></tr></thead>
           <tbody></tbody>
         </table></div>
       </section>
@@ -50,8 +60,8 @@
       <!-- QUEUE -->
       <section id="ops-queue" class="ops-view hidden">
         <div class="queue-head">
-          <h1 class="ops-h1">Bookings queue</h1>
-          <button class="btn ghost small" id="refreshBtn">↻ Refresh</button>
+          <h1 class="ops-h1" data-i18n="queue_title">Bookings queue</h1>
+          <button class="btn ghost small" id="refreshBtn" data-i18n="btn_refresh">↻ Refresh</button>
         </div>
         <div id="queueList" class="queue"></div>
       </section>

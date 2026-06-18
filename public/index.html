@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BugBuster Pro — Book pest control</title>
+  <title>BugBuster Pro</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -15,7 +15,13 @@
       <span class="brand-mark">◣◢</span>
       <span class="brand-name">BugBuster<span class="pro">Pro</span></span>
     </div>
-    <div class="topbar-right" id="topbarRight"></div>
+    <div class="topbar-right">
+      <div class="lang-toggle" id="langToggle">
+        <button class="lang-btn" data-lang="id">ID</button>
+        <button class="lang-btn" data-lang="en">EN</button>
+      </div>
+      <span id="topbarUser"></span>
+    </div>
   </header>
 
   <main class="wrap">
@@ -23,31 +29,31 @@
     <!-- AUTH -->
     <section id="view-auth" class="view">
       <div class="hero">
-        <p class="eyebrow">Pest control, handled</p>
-        <h1>Book a technician.<br/>Track them to your door.</h1>
-        <p class="lead">Termites, cockroaches, rats — pick a date, we dispatch the right specialist, and you watch the job from request to report.</p>
+        <p class="eyebrow" data-i18n="eyebrow">Pest control, handled</p>
+        <h1 data-i18n="hero_h1">Book a technician.<br/>Track them to your door.</h1>
+        <p class="lead" data-i18n="hero_lead">Termites, cockroaches, rats — pick a date, we dispatch the right specialist, and you watch the job from request to report.</p>
       </div>
 
       <div class="auth-card">
         <div class="tabs">
-          <button class="tab active" data-tab="login">Log in</button>
-          <button class="tab" data-tab="register">Create account</button>
+          <button class="tab active" data-tab="login" data-i18n="tab_login">Log in</button>
+          <button class="tab" data-tab="register" data-i18n="tab_register">Create account</button>
         </div>
 
         <form id="loginForm" class="form">
-          <label>Email<input type="email" name="email" value="demo@bugbuster.test" required /></label>
-          <label>Password<input type="password" name="password" value="demo123" required /></label>
-          <button class="btn primary" type="submit">Log in</button>
-          <p class="hint">Demo account is pre-filled. Or create your own.</p>
+          <label data-i18n="label_email">Email<input type="email" name="email" value="demo@bugbuster.test" required /></label>
+          <label data-i18n="label_password">Password<input type="password" name="password" value="demo123" required /></label>
+          <button class="btn primary" type="submit" data-i18n="btn_login">Log in</button>
+          <p class="hint" data-i18n="hint_demo">Demo account is pre-filled. Or create your own.</p>
         </form>
 
         <form id="registerForm" class="form hidden">
-          <label>Full name<input name="name" required /></label>
-          <label>Email<input type="email" name="email" required /></label>
-          <label>Phone (numbers only)<input name="phone" inputmode="numeric" required /></label>
-          <label>Address<input name="address" required /></label>
-          <label>Password<input type="password" name="password" required /></label>
-          <button class="btn primary" type="submit">Create account</button>
+          <label data-i18n="label_fullname">Full name<input name="name" required /></label>
+          <label data-i18n="label_email">Email<input type="email" name="email" required /></label>
+          <label data-i18n="label_phone_numeric">Phone (numbers only)<input name="phone" inputmode="numeric" required /></label>
+          <label data-i18n="label_address">Address<input name="address" required /></label>
+          <label data-i18n="label_password">Password<input type="password" name="password" required /></label>
+          <button class="btn primary" type="submit" data-i18n="btn_register">Create account</button>
         </form>
         <p id="authMsg" class="msg"></p>
       </div>
@@ -56,46 +62,61 @@
     <!-- DASHBOARD -->
     <section id="view-app" class="view hidden">
       <nav class="subnav">
-        <button class="navbtn active" data-panel="book">Book service</button>
-        <button class="navbtn" data-panel="bookings">My bookings</button>
+        <button class="navbtn active" data-panel="book" data-i18n="nav_book">Book service</button>
+        <button class="navbtn" data-panel="bookings" data-i18n="nav_bookings">My bookings</button>
       </nav>
 
       <!-- BOOK -->
       <div id="panel-book" class="panel">
-        <h2 class="panel-title">Book a service</h2>
+        <h2 class="panel-title" data-i18n="book_title">Book a service</h2>
         <form id="bookForm" class="card form grid2">
-          <label class="full">Service type
+          <label class="full" data-i18n="label_service_type">Service type
             <select name="service_type_id" id="serviceSelect" required></select>
           </label>
+
+          <label class="full radio-field" data-i18n="label_property_type">Property type
+            <div class="radio-row">
+              <label class="radio-pill"><input type="radio" name="property_type" value="house" checked /><span data-i18n="property_house">House</span></label>
+              <label class="radio-pill"><input type="radio" name="property_type" value="apartment" /><span data-i18n="property_apartment">Apartment</span></label>
+            </div>
+          </label>
+
           <label>Date
             <input type="date" name="booking_date" id="bookDate" required />
           </label>
-          <label>Preferred time
-            <input type="time" name="preferred_time" value="09:00" required />
+          <label data-i18n="label_preferred_time">Preferred time
+            <select name="preferred_time" id="bookTime" required></select>
           </label>
-          <label class="full">Service address
+
+          <label class="full" data-i18n="label_address">Service address
             <input name="address" id="bookAddress" required />
           </label>
-          <label class="full">Pest details (what are you seeing?)
-            <textarea name="pest_notes" rows="3" placeholder="e.g. droppings in the kitchen, scratching in the ceiling at night"></textarea>
+          <label class="full" data-i18n="label_phone_numeric">Phone (numbers only)
+            <input name="phone" id="bookPhone" inputmode="numeric" required />
           </label>
+          <label class="full" data-i18n="label_pest_details">Pest details (what are you seeing?)
+            <textarea name="pest_notes" id="bookNotes" rows="3" data-i18n-placeholder="placeholder_pest_notes" placeholder="e.g. droppings in the kitchen, scratching in the ceiling at night"></textarea>
+          </label>
+
+          <p id="availabilityMsg" class="msg full"></p>
+
           <div class="full price-row">
-            <span>Price</span><strong id="priceTag">—</strong>
+            <span data-i18n="price_label">Price</span><strong id="priceTag">—</strong>
           </div>
-          <button class="btn primary full" type="submit">Confirm booking</button>
+          <button class="btn primary full" type="submit" data-i18n="btn_confirm_booking">Confirm booking</button>
         </form>
         <p id="bookMsg" class="msg"></p>
       </div>
 
       <!-- BOOKINGS -->
       <div id="panel-bookings" class="panel hidden">
-        <h2 class="panel-title">My bookings</h2>
+        <h2 class="panel-title" data-i18n="bookings_title">My bookings</h2>
         <div id="bookingsList" class="stack"></div>
       </div>
     </section>
   </main>
 
-  <!-- modal for report / feedback -->
+  <!-- modal for report / feedback / payment -->
   <div id="modal" class="modal-backdrop hidden">
     <div class="modal">
       <button class="modal-close" id="modalClose">×</button>

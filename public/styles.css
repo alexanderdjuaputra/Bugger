@@ -47,6 +47,11 @@ body {
 .topbar-right .who { opacity: .85; }
 .linklike { background: none; border: none; color: var(--lime); cursor: pointer; font: inherit; padding: 0; }
 
+.lang-toggle { display: flex; background: rgba(255,255,255,.08); border-radius: 999px; padding: 3px; gap: 2px; }
+.lang-btn { border: none; background: transparent; color: #cfe3da; font: inherit; font-weight: 700; font-size: 12px;
+  padding: 5px 11px; border-radius: 999px; cursor: pointer; letter-spacing: .03em; }
+.lang-btn.active { background: var(--lime); color: var(--pine); }
+
 /* ---------- layout ---------- */
 .wrap { max-width: 920px; margin: 0 auto; padding: 28px 20px 80px; }
 .view.hidden, .panel.hidden, .hidden { display: none !important; }
@@ -171,3 +176,27 @@ textarea { resize: vertical; }
   .form.grid2 { grid-template-columns: 1fr; }
   .hero h1 { font-size: 32px; }
 }
+
+/* ---------- property type radio pills ---------- */
+.radio-field { gap: 8px; }
+.radio-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.radio-pill { display: flex; align-items: center; gap: 7px; border: 1px solid var(--line); border-radius: 999px;
+  padding: 9px 16px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--ink);
+  background: #fcfcf9; flex: initial; }
+.radio-pill input { margin: 0; accent-color: var(--pine); width: 16px; height: 16px; }
+.radio-pill:has(input:checked) { border-color: var(--pine); background: #eef6ee; }
+
+select#bookTime option:disabled { color: #b9b6a8; }
+
+/* ---------- payment modal ---------- */
+.pay-tabs { display: flex; gap: 6px; background: #eef0e7; border-radius: 10px; padding: 4px; margin-bottom: 4px; }
+.pay-tab { flex: 1; border: none; background: transparent; padding: 10px; border-radius: 8px; font: inherit;
+  font-weight: 600; color: var(--muted); cursor: pointer; }
+.pay-tab.active { background: var(--card); color: var(--pine); box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.card-grid .full { grid-column: 1 / -1; }
+.qris-box { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 10px 0 4px; }
+.qris-box svg { width: 180px; height: 180px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.qris-caption { font-size: 13px; color: var(--muted); text-align: center; }
+.demo-tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  background: #f0f6e8; color: var(--pine-2); border: 1px dashed var(--lime-d); border-radius: 999px; padding: 3px 10px; margin-bottom: 10px; }

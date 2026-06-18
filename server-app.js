@@ -27,6 +27,11 @@ const REFUND_KEY = 'refund';
 const SESSION_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 const STATUS_ORDER = ['pending', 'confirmed', 'in progress', 'completed'];
+const PROPERTY_TYPES = ['apartment', 'house'];
+// Bookable slots are restricted to 09:00–18:00, one hour apart. This also
+// gives the technician-availability check a fixed, small set of values to
+// reason about, instead of arbitrary free-form times.
+const TIME_SLOTS = ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00'];
 
 function isValidTransition(from, to) {
   if (to === 'cancelled') return from !== 'completed';
@@ -83,6 +88,29 @@ function createApp(db) {
 
   /* ----------------------------- helpers ----------------------------- */
 
+  // Computes, for every bookable slot on a given date, whether at least
+  // one technician is free. A slot is "full" only once every technician
+  // already has a Schedule entry for that exact date+slot — this mirrors
+  // exactly how the dispatcher's "assign technician" double-booking guard
+  // already works, just checked proactively at booking time too.
+  async function computeDayAvailability(date) {
+    const [techSnap, schedSnap] = await Promise.all([
+      db.collection('technicians').get(),
+      db.collection('schedules').where('date', '==', date).get(),
+    ]);
+    const totalTechs = techSnap.size;
+    const countBySlot = {};
+    schedSnap.docs.forEach(d => {
+      const slot = d.data().timeSlot;
+      countBySlot[slot] = (countBySlot[slot] || 0) + 1;
+    });
+    const result = {};
+    for (const slot of TIME_SLOTS) {
+      result[slot] = totalTechs === 0 ? false : (countBySlot[slot] || 0) < totalTechs;
+    }
+    return result;
+  }
+
   async function getBookingView(bookingId) {
     const bSnap = await db.collection('bookings').doc(bookingId).get();
     if (!bSnap.exists) return null;
@@ -104,11 +132,14 @@ function createApp(db) {
       preferred_time: b.preferredTime,
       address: b.address,
       pest_notes: b.pestNotes || '',
+      property_type: b.propertyType || null,
+      phone: b.phone || null,
       status: b.status,
       created_at: b.createdAt,
       customer_name: customer.name,
       customer_phone: customer.phone,
       service_name: service.name,
+      service_name_id: service.nameId || service.name,
       service_price: service.price,
       technician_name: technician ? technician.name : null,
     };
@@ -138,19 +169,30 @@ function createApp(db) {
     res.json(rows);
   });
 
+  // Lets the customer site grey out slots with no technician free, BEFORE
+  // they submit a booking — not just discover the conflict afterward.
+  app.get('/api/availability', async (req, res) => {
+    const { date } = req.query;
+    if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return res.status(400).json({ error: 'Valid date (YYYY-MM-DD) is required.', code: 'INVALID_DATE' });
+    }
+    const slots = await computeDayAvailability(date);
+    res.json({ date, slots });
+  });
+
   /* =========================== customer side =========================== */
 
   app.post('/api/customers/register', async (req, res) => {
     const { name, email, phone, address, password } = req.body;
     if (!name || !email || !phone || !address || !password)
-      return res.status(400).json({ error: 'All fields are required.' });
+      return res.status(400).json({ error: 'All fields are required.', code: 'MISSING_FIELDS' });
     if (!/^\d{6,15}$/.test(phone))
-      return res.status(400).json({ error: 'Phone must be 6–15 digits, numbers only.' });
+      return res.status(400).json({ error: 'Phone must be 6–15 digits, numbers only.', code: 'INVALID_PHONE' });
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-      return res.status(400).json({ error: 'Invalid email format.' });
+      return res.status(400).json({ error: 'Invalid email format.', code: 'INVALID_EMAIL' });
 
     const existing = await db.collection('customers').where('email', '==', email).get();
-    if (!existing.empty) return res.status(409).json({ error: 'Email already registered.' });
+    if (!existing.empty) return res.status(409).json({ error: 'Email already registered.', code: 'EMAIL_TAKEN' });
 
     const ref = db.collection('customers').doc();
     await ref.set({ name, email, phone, address, password, createdAt: Date.now() });
@@ -161,25 +203,48 @@ function createApp(db) {
     const { email, password } = req.body;
     const snap = await db.collection('customers').where('email', '==', email).get();
     const match = snap.docs.find(d => d.data().password === password);
-    if (!match) return res.status(401).json({ error: 'Invalid email or password.' });
+    if (!match) return res.status(401).json({ error: 'Invalid email or password.', code: 'INVALID_CREDENTIALS' });
     const c = match.data();
     res.json({ customer_id: match.id, name: c.name, phone: c.phone, address: c.address });
   });
 
   app.post('/api/bookings', async (req, res) => {
-    const { customer_id, service_type_id, booking_date, preferred_time, address, pest_notes } = req.body;
+    const { customer_id, service_type_id, booking_date, preferred_time, address, pest_notes,
+            property_type, phone } = req.body;
 
-    if (!customer_id || !service_type_id || !booking_date || !preferred_time || !address)
-      return res.status(400).json({ error: 'Service, date, time and address are required.' });
+    // [INPUT] required fields
+    if (!customer_id || !service_type_id || !booking_date || !preferred_time || !address || !property_type || !phone)
+      return res.status(400).json({ error: 'Service, date, time, address, property type and phone are required.', code: 'MISSING_FIELDS' });
+    // [INPUT] booking date cannot be in the past
     if (!isValidDateNotPast(booking_date))
-      return res.status(400).json({ error: 'Booking date must be today or in the future (YYYY-MM-DD).' });
+      return res.status(400).json({ error: 'Booking date must be today or in the future (YYYY-MM-DD).', code: 'PAST_DATE' });
+    // [INPUT] preferred time must be one of the fixed bookable slots (09:00–18:00)
+    if (!TIME_SLOTS.includes(preferred_time))
+      return res.status(400).json({ error: 'Preferred time must be a valid slot between 09:00 and 18:00.', code: 'INVALID_TIME_SLOT' });
+    // [INPUT] property type must be one of the two supported values
+    if (!PROPERTY_TYPES.includes(property_type))
+      return res.status(400).json({ error: 'Property type must be apartment or house.', code: 'INVALID_PROPERTY_TYPE' });
+    // [INPUT] phone must be numeric, same rule as registration
+    if (!/^\d{6,15}$/.test(phone))
+      return res.status(400).json({ error: 'Phone must be 6–15 digits, numbers only.', code: 'INVALID_PHONE' });
 
     const [custSnap, svcSnap] = await Promise.all([
       db.collection('customers').doc(String(customer_id)).get(),
       db.collection('serviceTypes').doc(String(service_type_id)).get(),
     ]);
-    if (!custSnap.exists) return res.status(400).json({ error: 'Unknown customer.' });
-    if (!svcSnap.exists) return res.status(400).json({ error: 'Unknown service type.' });
+    if (!custSnap.exists) return res.status(400).json({ error: 'Unknown customer.', code: 'UNKNOWN_CUSTOMER' });
+    if (!svcSnap.exists) return res.status(400).json({ error: 'Unknown service type.', code: 'UNKNOWN_SERVICE' });
+
+    // [INPUT] server-side re-check of technician availability — defense in
+    // depth in case the customer's browser had stale data (e.g. someone
+    // else just took the last open slot a moment ago).
+    const dayAvailability = await computeDayAvailability(booking_date);
+    if (dayAvailability[preferred_time] === false) {
+      return res.status(409).json({
+        error: 'No technician is available at that date and time. Please choose a different slot.',
+        code: 'SLOT_FULL',
+      });
+    }
 
     // Atomic sequential ID so booking numbers stay short and ordered,
     // mirroring the original SQLite AUTOINCREMENT behaviour.
@@ -200,6 +265,8 @@ function createApp(db) {
       preferredTime: preferred_time,
       address,
       pestNotes: pest_notes || '',
+      propertyType: property_type,
+      phone,
       status: 'confirmed',
       createdAt: Date.now(),
     });
@@ -252,10 +319,10 @@ function createApp(db) {
     const { method } = req.body;
     const ref = db.collection('payments').doc(req.params.id);
     const snap = await ref.get();
-    if (!snap.exists) return res.status(404).json({ error: 'No invoice generated yet.' });
+    if (!snap.exists) return res.status(404).json({ error: 'No invoice generated yet.', code: 'NO_INVOICE' });
     const pay = snap.data();
-    if (pay.status === 'paid') return res.status(409).json({ error: 'Already paid.' });
-    if (pay.status === 'refunded') return res.status(409).json({ error: 'Payment was refunded.' });
+    if (pay.status === 'paid') return res.status(409).json({ error: 'Already paid.', code: 'ALREADY_PAID' });
+    if (pay.status === 'refunded') return res.status(409).json({ error: 'Payment was refunded.', code: 'REFUNDED' });
     await ref.update({ status: 'paid', method: method || 'app' });
     res.json({ ok: true, status: 'paid' });
   });
@@ -263,13 +330,13 @@ function createApp(db) {
   app.post('/api/bookings/:id/feedback', async (req, res) => {
     const { customer_id, rating, comment } = req.body;
     const bView = await getBookingView(req.params.id);
-    if (!bView) return res.status(404).json({ error: 'Booking not found.' });
+    if (!bView) return res.status(404).json({ error: 'Booking not found.', code: 'BOOKING_NOT_FOUND' });
     if (String(bView.customer_id) !== String(customer_id))
-      return res.status(403).json({ error: 'You can only review your own booking.' });
+      return res.status(403).json({ error: 'You can only review your own booking.', code: 'NOT_YOUR_BOOKING' });
     if (bView.status !== 'completed')
-      return res.status(409).json({ error: 'You can only review a completed service.' });
+      return res.status(409).json({ error: 'You can only review a completed service.', code: 'NOT_COMPLETED' });
     const r = Number(rating);
-    if (!(r >= 1 && r <= 5)) return res.status(400).json({ error: 'Rating must be between 1 and 5.' });
+    if (!(r >= 1 && r <= 5)) return res.status(400).json({ error: 'Rating must be between 1 and 5.', code: 'INVALID_RATING' });
 
     try {
       // booking_id is used as the document ID -> a second attempt to
@@ -280,7 +347,7 @@ function createApp(db) {
       });
       res.json({ ok: true });
     } catch (e) {
-      res.status(409).json({ error: 'Feedback already submitted for this booking.' });
+      res.status(409).json({ error: 'Feedback already submitted for this booking.', code: 'FEEDBACK_EXISTS' });
     }
   });
 
@@ -289,7 +356,7 @@ function createApp(db) {
   app.post('/api/admin/login', async (req, res) => {
     const { username, password } = req.body;
     if (username !== ADMIN_USER || password !== ADMIN_PASS)
-      return res.status(401).json({ error: 'Invalid admin credentials.' });
+      return res.status(401).json({ error: 'Invalid admin credentials.', code: 'INVALID_ADMIN_CREDENTIALS' });
     const token = newToken();
     await db.collection('sessions').doc(token).set({ createdAt: Date.now(), expiresAt: Date.now() + SESSION_TTL_MS });
     res.json({ token });
@@ -336,9 +403,9 @@ function createApp(db) {
     const { technician_id } = req.body;
     const bookingRef = db.collection('bookings').doc(req.params.id);
     const bSnap = await bookingRef.get();
-    if (!bSnap.exists) return res.status(404).json({ error: 'Booking not found.' });
+    if (!bSnap.exists) return res.status(404).json({ error: 'Booking not found.', code: 'BOOKING_NOT_FOUND' });
     const techSnap = await db.collection('technicians').doc(String(technician_id)).get();
-    if (!techSnap.exists) return res.status(400).json({ error: 'Unknown technician.' });
+    if (!techSnap.exists) return res.status(400).json({ error: 'Unknown technician.', code: 'UNKNOWN_TECHNICIAN' });
 
     const b = bSnap.data();
     const scheduleId = `${technician_id}_${b.bookingDate}_${b.preferredTime}`;
@@ -356,7 +423,7 @@ function createApp(db) {
         tx.update(bookingRef, { technicianId: String(technician_id), status: 'in progress' });
       });
     } catch (e) {
-      if (e.code === 'DOUBLE_BOOKED') return res.status(409).json({ error: e.message });
+      if (e.code === 'DOUBLE_BOOKED') return res.status(409).json({ error: e.message, code: 'DOUBLE_BOOKED' });
       throw e;
     }
 
@@ -366,17 +433,17 @@ function createApp(db) {
   app.post('/api/admin/bookings/:id/report', requireAdmin, async (req, res) => {
     const { pest_found, severity, findings, safety_notes, chemicals } = req.body;
     const bView = await getBookingView(req.params.id);
-    if (!bView) return res.status(404).json({ error: 'Booking not found.' });
-    if (!bView.technician_id) return res.status(409).json({ error: 'Assign a technician before reporting.' });
+    if (!bView) return res.status(404).json({ error: 'Booking not found.', code: 'BOOKING_NOT_FOUND' });
+    if (!bView.technician_id) return res.status(409).json({ error: 'Assign a technician before reporting.', code: 'NO_TECHNICIAN' });
     if (!pest_found || !severity || !findings)
-      return res.status(400).json({ error: 'Pest found, severity and findings are required.' });
+      return res.status(400).json({ error: 'Pest found, severity and findings are required.', code: 'MISSING_REPORT_FIELDS' });
     if (!Array.isArray(chemicals) || chemicals.length === 0 || !chemicals.every(c => c.chemical_name && c.quantity))
-      return res.status(400).json({ error: 'At least one chemical (name + quantity) is required.' });
+      return res.status(400).json({ error: 'At least one chemical (name + quantity) is required.', code: 'MISSING_CHEMICALS' });
 
     const reportRef = db.collection('serviceReports').doc(req.params.id);
     const existing = await reportRef.get();
     if (existing.exists && existing.data().approved) {
-      return res.status(409).json({ error: 'Report is approved and locked; cannot edit.' });
+      return res.status(409).json({ error: 'Report is approved and locked; cannot edit.', code: 'REPORT_LOCKED' });
     }
 
     const batch = db.batch();
@@ -397,7 +464,7 @@ function createApp(db) {
   app.post('/api/admin/bookings/:id/report/approve', requireAdmin, async (req, res) => {
     const ref = db.collection('serviceReports').doc(req.params.id);
     const snap = await ref.get();
-    if (!snap.exists) return res.status(404).json({ error: 'No report to approve.' });
+    if (!snap.exists) return res.status(404).json({ error: 'No report to approve.', code: 'NO_REPORT' });
     await ref.update({ approved: true });
     res.json({ ok: true });
   });
@@ -434,8 +501,9 @@ function createApp(db) {
         tx.update(bookingRef, { status });
       });
     } catch (e) {
-      if (e.code === 'NOT_FOUND') return res.status(404).json({ error: e.message });
-      if (e.code === 'BAD_TRANSITION' || e.code === 'NO_APPROVED_REPORT') return res.status(409).json({ error: e.message });
+      if (e.code === 'NOT_FOUND') return res.status(404).json({ error: e.message, code: 'NOT_FOUND' });
+      if (e.code === 'BAD_TRANSITION') return res.status(409).json({ error: e.message, code: 'BAD_TRANSITION' });
+      if (e.code === 'NO_APPROVED_REPORT') return res.status(409).json({ error: e.message, code: 'NO_APPROVED_REPORT' });
       throw e;
     }
 
@@ -446,7 +514,7 @@ function createApp(db) {
   // user-supplied, so it can never drift from the booked service price.
   app.post('/api/admin/bookings/:id/invoice', requireAdmin, async (req, res) => {
     const bView = await getBookingView(req.params.id);
-    if (!bView) return res.status(404).json({ error: 'Booking not found.' });
+    if (!bView) return res.status(404).json({ error: 'Booking not found.', code: 'BOOKING_NOT_FOUND' });
     const ref = db.collection('payments').doc(req.params.id);
     const snap = await ref.get();
     if (snap.exists) return res.json({ payment_id: req.params.id, booking_id: req.params.id, ...snap.data() });
@@ -460,11 +528,11 @@ function createApp(db) {
   app.post('/api/admin/bookings/:id/refund', requireAdmin, async (req, res) => {
     const { security_key } = req.body;
     if (security_key !== REFUND_KEY)
-      return res.status(403).json({ error: 'Invalid finance security key. Refund denied.' });
+      return res.status(403).json({ error: 'Invalid finance security key. Refund denied.', code: 'INVALID_REFUND_KEY' });
     const ref = db.collection('payments').doc(req.params.id);
     const snap = await ref.get();
-    if (!snap.exists) return res.status(404).json({ error: 'No payment to refund.' });
-    if (snap.data().status !== 'paid') return res.status(409).json({ error: 'Only paid invoices can be refunded.' });
+    if (!snap.exists) return res.status(404).json({ error: 'No payment to refund.', code: 'NO_PAYMENT' });
+    if (snap.data().status !== 'paid') return res.status(409).json({ error: 'Only paid invoices can be refunded.', code: 'NOT_PAID' });
     await ref.update({ status: 'refunded' });
     res.json({ ok: true, status: 'refunded' });
   });

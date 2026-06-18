@@ -68,8 +68,20 @@ function req(server, method, p, body, headers = {}) {
     ok(r.status === 400, '[INPUT] rejects booking with missing fields');
 
     const future = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+
     r = await req(serverA, 'POST', '/api/bookings',
-      { customer_id: cid, service_type_id: 1, booking_date: future, preferred_time: '10:00', address: 'Jl Test 1', pest_notes: 'termites in frame' });
+      { customer_id: cid, service_type_id: 1, booking_date: future, preferred_time: '08:30', address: 'A', property_type: 'house', phone: '081234567890' });
+    ok(r.status === 400 && r.body.code === 'INVALID_TIME_SLOT', '[INPUT] rejects a time outside the 09:00-18:00 slot list');
+
+    r = await req(serverA, 'POST', '/api/bookings',
+      { customer_id: cid, service_type_id: 1, booking_date: future, preferred_time: '09:00', address: 'A', property_type: 'castle', phone: '081234567890' });
+    ok(r.status === 400 && r.body.code === 'INVALID_PROPERTY_TYPE', '[INPUT] rejects an invalid property type');
+
+    r = await req(serverA, 'GET', `/api/availability?date=${future}`);
+    ok(r.status === 200 && r.body.slots['09:00'] === true, 'availability endpoint returns open slots for a fresh date');
+
+    r = await req(serverA, 'POST', '/api/bookings',
+      { customer_id: cid, service_type_id: 1, booking_date: future, preferred_time: '10:00', address: 'Jl Test 1', pest_notes: 'termites in frame', property_type: 'house', phone: '081234567890' });
     ok(r.status === 200 && r.body.status === 'confirmed', 'create booking (Termites)');
     const bid = r.body.booking_id;
 
@@ -102,10 +114,35 @@ function req(server, method, p, body, headers = {}) {
     ok(r.status === 200 && r.body.status === 'in progress', 'assign technician moves to in progress');
 
     let r2 = await req(serverB, 'POST', '/api/bookings',
-      { customer_id: cid, service_type_id: 2, booking_date: future, preferred_time: '10:00', address: 'Jl Test 1' });
+      { customer_id: cid, service_type_id: 2, booking_date: future, preferred_time: '10:00', address: 'Jl Test 1', property_type: 'apartment', phone: '081234567890' });
     const bid2 = r2.body.booking_id;
     r = await req(serverB, 'POST', `/api/admin/bookings/${bid2}/assign`, { technician_id: 1 }, H);
     ok(r.status === 409, '[INPUT] double-booking prevented (same tech/date/slot)');
+
+    console.log('\n— All technicians booked -> slot should become unavailable —');
+    const slotDate = new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10); // a fresh date, untouched so far
+    const slotTime = '15:00';
+    const bidsForSlot = [];
+    for (let i = 0; i < 3; i++) {
+      const rb = await req(serverB, 'POST', '/api/bookings',
+        { customer_id: cid, service_type_id: 1, booking_date: slotDate, preferred_time: slotTime,
+          address: 'Jl Penuh', property_type: 'house', phone: '081234567890' });
+      bidsForSlot.push(rb.body.booking_id);
+    }
+    // assign all 3 technicians (1, 2, 3) to that same date+slot across the 3 bookings
+    for (let i = 0; i < 3; i++) {
+      const ra = await req(serverB, 'POST', `/api/admin/bookings/${bidsForSlot[i]}/assign`, { technician_id: i + 1 }, H);
+      ok(ra.status === 200, `assign technician ${i + 1} to fill the shared slot`);
+    }
+    r = await req(serverB, 'GET', `/api/availability?date=${slotDate}`);
+    ok(r.status === 200 && r.body.slots[slotTime] === false,
+       '[OUTPUT] availability endpoint reports the now-full slot as unavailable');
+
+    r = await req(serverB, 'POST', '/api/bookings',
+      { customer_id: cid, service_type_id: 1, booking_date: slotDate, preferred_time: slotTime,
+        address: 'Jl Penuh', property_type: 'house', phone: '081234567890' });
+    ok(r.status === 409 && r.body.code === 'SLOT_FULL',
+       '[INPUT] a 4th booking on the same fully-booked slot is rejected server-side');
 
     console.log('\n— Processing controls —');
     r = await req(serverB, 'POST', `/api/admin/bookings/${bid}/status`, { status: 'completed' }, H);
