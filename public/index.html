@@ -41,18 +41,18 @@
         </div>
 
         <form id="loginForm" class="form">
-          <label data-i18n="label_email">Email<input type="email" name="email" value="demo@bugbuster.test" required /></label>
-          <label data-i18n="label_password">Password<input type="password" name="password" value="demo123" required /></label>
+          <label><span data-i18n="label_email">Email</span><input type="email" name="email" value="demo@bugbuster.test" required /></label>
+          <label><span data-i18n="label_password">Password</span><input type="password" name="password" value="demo123" required /></label>
           <button class="btn primary" type="submit" data-i18n="btn_login">Log in</button>
           <p class="hint" data-i18n="hint_demo">Demo account is pre-filled. Or create your own.</p>
         </form>
 
         <form id="registerForm" class="form hidden">
-          <label data-i18n="label_fullname">Full name<input name="name" required /></label>
-          <label data-i18n="label_email">Email<input type="email" name="email" required /></label>
-          <label data-i18n="label_phone_numeric">Phone (numbers only)<input name="phone" inputmode="numeric" required /></label>
-          <label data-i18n="label_address">Address<input name="address" required /></label>
-          <label data-i18n="label_password">Password<input type="password" name="password" required /></label>
+          <label><span data-i18n="label_fullname">Full name</span><input name="name" required /></label>
+          <label><span data-i18n="label_email">Email</span><input type="email" name="email" required /></label>
+          <label><span data-i18n="label_phone_numeric">Phone (numbers only)</span><input name="phone" inputmode="numeric" required /></label>
+          <label><span data-i18n="label_address">Address</span><input name="address" required /></label>
+          <label><span data-i18n="label_password">Password</span><input type="password" name="password" required /></label>
           <button class="btn primary" type="submit" data-i18n="btn_register">Create account</button>
         </form>
         <p id="authMsg" class="msg"></p>
@@ -70,11 +70,11 @@
       <div id="panel-book" class="panel">
         <h2 class="panel-title" data-i18n="book_title">Book a service</h2>
         <form id="bookForm" class="card form grid2">
-          <label class="full" data-i18n="label_service_type">Service type
+          <label class="full"><span data-i18n="label_service_type">Service type</span>
             <select name="service_type_id" id="serviceSelect" required></select>
           </label>
 
-          <label class="full radio-field" data-i18n="label_property_type">Property type
+          <label class="full radio-field"><span data-i18n="label_property_type">Property type</span>
             <div class="radio-row">
               <label class="radio-pill"><input type="radio" name="property_type" value="house" checked /><span data-i18n="property_house">House</span></label>
               <label class="radio-pill"><input type="radio" name="property_type" value="apartment" /><span data-i18n="property_apartment">Apartment</span></label>
@@ -84,17 +84,17 @@
           <label>Date
             <input type="date" name="booking_date" id="bookDate" required />
           </label>
-          <label data-i18n="label_preferred_time">Preferred time
+          <label><span data-i18n="label_preferred_time">Preferred time</span>
             <select name="preferred_time" id="bookTime" required></select>
           </label>
 
-          <label class="full" data-i18n="label_address">Service address
+          <label class="full"><span data-i18n="label_address">Service address</span>
             <input name="address" id="bookAddress" required />
           </label>
-          <label class="full" data-i18n="label_phone_numeric">Phone (numbers only)
+          <label class="full"><span data-i18n="label_phone_numeric">Phone (numbers only)</span>
             <input name="phone" id="bookPhone" inputmode="numeric" required />
           </label>
-          <label class="full" data-i18n="label_pest_details">Pest details (what are you seeing?)
+          <label class="full"><span data-i18n="label_pest_details">Pest details (what are you seeing?)</span>
             <textarea name="pest_notes" id="bookNotes" rows="3" data-i18n-placeholder="placeholder_pest_notes" placeholder="e.g. droppings in the kitchen, scratching in the ceiling at night"></textarea>
           </label>
 
